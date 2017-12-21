@@ -1,13 +1,10 @@
 ---
 # defaults file for prometheus
 
-prometheus_build_folder: /tmp/prometheus
 prometheus_user: prometheus
 prometheus_group: prometheus
 prometheus_service_name: prometheus
-prometheus_repo: https://github.com/prometheus/prometheus
 
-prometheus_install_dir: /opt/prometheus
 prometheus_conf_dir: /etc/prometheus
 prometheus_log_dir: /var/log/prometheus
 
@@ -19,27 +16,12 @@ prometheus_global_labels: {} # k:v dict
 
 prometheus_rule_files: [] # - filename.rules
 
-prometheus_target_jobs: []
-# an example job
-#  - job_name: 'web-server'
-#      scrape_interval: '5s'
-#      scrape_timeout: '10s'
-#      target_groups:
-#        targets:
-#          - "localhost:9090"
-#        labels:
-#          a: b
-#
-#  - job_name: 'service_from_consul'
-#    scrape_interval: '5s'
-#    scrape_timeout: '10s'
-#    consul_sd_configs:
-#      - server: "localhost"
-#        datacenter: "dc1"
-#        scheme: "rpc"
-#        token: ""
-#        username: ""
-#        password: ""
-#        services:
-#          - myservicename
-#        tag_separator: ":"
+prometheus_scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+        - "localhost:9090"
+  - job_name: 'node'
+    static_configs:
+      - targets:
+        - "localhost:9100"

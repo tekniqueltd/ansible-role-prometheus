@@ -1,6 +1,8 @@
 ---
-dependencies:
-  - { role : gotansible.runit }
+#dependencies:
+#  - { role : gotansible.runit }
+
+# TODO: Update this information
 
 galaxy_info:
   author: Franklin Wise

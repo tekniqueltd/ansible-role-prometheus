@@ -1,0 +1,17 @@
+---
+- hosts: all
+  become: yes
+  roles:
+    - role: prometheus
+      prometheus_conf_dir: ./output
+      prometheus_global_labels:
+        monitor: example
+      prometheus_scrape_configs:
+        - job_name: 'prometheus'
+          static_configs:
+            - targets:
+              - "localhost:9090"
+        - job_name: 'node'
+          static_configs:
+            - targets:
+              - "localhost:9100"

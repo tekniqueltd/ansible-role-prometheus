@@ -1,8 +1,5 @@
 ---
 
-- name: install dependencies
-  include: depend.yml
-
 - name: install prometheus
   include: install.yml
 
@@ -12,3 +9,4 @@
 - name: setup service
   include: service.yml
 
+- meta: flush_handlers
