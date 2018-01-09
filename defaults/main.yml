@@ -1,12 +1,25 @@
 ---
 # defaults file for prometheus
 
+# assume user == group
 prometheus_user: prometheus
-prometheus_group: prometheus
-prometheus_service_name: prometheus
+prometheus_node_exporter_user: node_exporter
 
 prometheus_conf_dir: /etc/prometheus
+prometheus_install_dir: /usr/bin
 prometheus_log_dir: /var/log/prometheus
+prometheus_storage_dir: /var/lib/prometheus
+prometheus_work_dir: /tmp/prometheus
+prometheus_clean_work_dir: yes
+
+# update the checksum if the version/platform is changed
+prometheus_tar_checksum: "e12917b25b32980daee0e9cf879d9ec197e2893924bd1574604eb0f550034d46"
+prometheus_tar_version: "2.0.0"
+
+prometheus_node_exporter_install: yes
+# update the checksum if the version/platform is changed
+prometheus_node_exporter_tar_checksum: "1ce667467e442d1f7fbfa7de29a8ffc3a7a0c84d24d7c695cc88b29e0752df37"
+prometheus_node_exporter_tar_version: "0.15.2"
 
 # ---
 prometheus_global_scrape_interval: 30s

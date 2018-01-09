@@ -2,7 +2,14 @@
 # handlers file for prometheus
 
 - name: restart prometheus
-  service:
-    name: "{{ prometheus_service_name }}"
-    state: restarted
+  systemd:
+    name: prometheus
+    state: reloaded
+  become: yes
+  when: 
+
+
+- name: systemctl reload
+  systemd:
+    daemon_reload: yes
   become: yes

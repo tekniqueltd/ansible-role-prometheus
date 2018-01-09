@@ -6,7 +6,4 @@
 - name: configure prometheus
   include: config.yml
 
-- name: setup service
-  include: service.yml
-
 - meta: flush_handlers

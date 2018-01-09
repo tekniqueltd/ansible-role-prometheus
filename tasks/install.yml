@@ -1,8 +1,246 @@
 ---
 
-- name: install dependencies
-  apt: pkg={{ item }} state=present update_cache=true
-  with_items:
-    - prometheus
+- name: Install dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
   become: yes
   when: ansible_os_family == 'Debian'
+  with_items:
+    - daemon
+    - libjs-bootstrap
+    - libjs-d3
+    - libjs-eonasdan-bootstrap-datetimepicker
+    - libjs-jquery-hotkeys
+    - libjs-moment
+    - libjs-mustache
+    - libjs-rickshaw
+
+- name: Ensure prometheus apt packages are not present
+  apt:
+    name: "{{ item }}"
+    state: absent
+    purge: yes
+  become: yes
+  when: ansible_os_family == 'Debian'
+  with_items:
+    - prometheus
+    - prometheus-node-exporter
+
+
+- set_fact:
+    prometheus_release_name: "prometheus-{{ prometheus_tar_version }}.linux-{{ ansible_architecture|regex_replace('x86_64','amd64') }}"
+    prometheus_node_exporter_release_name: "node_exporter-{{ prometheus_node_exporter_tar_version }}.linux-{{ ansible_architecture|regex_replace('x86_64','amd64') }}"
+
+
+# user/group creation
+- name: Create prometheus user if not root
+  user:
+    name: "{{ prometheus_user }}"
+  become: yes
+  when: prometheus_user != "root"
+
+- block:
+    - name: Create node_exporter user if not root
+      user:
+        name: "{{ prometheus_node_exporter_user }}"
+      become: yes
+      when: prometheus_node_exporter_user != "root"
+  when: prometheus_node_exporter_install
+
+
+- name: Create work directory
+  file:
+    path: "{{ prometheus_work_dir }}/"
+    state: directory
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    mode: 0755
+  become: yes
+
+- name: Create prometheus storage directory
+  file:
+    path: "{{ prometheus_storage_dir }}/"
+    state: directory
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    mode: 0755
+    recurse: yes
+  become: yes
+
+
+# Download and install Prometheus
+- block:
+    - name: Download prometheus release
+      get_url:
+        url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_tar_version }}/{{ prometheus_release_name }}.tar.gz"
+        dest: "{{ prometheus_work_dir }}/"
+        checksum: "sha256:{{ prometheus_tar_checksum }}"
+      register: download_prometheus_release
+      become_user: "{{ prometheus_user }}"
+      become: yes
+
+    - name: Check for existing prometheus
+      stat:
+        path: "{{ prometheus_work_dir }}/{{ prometheus_release_name }}"
+      register: check_existing_prometheus
+      become_user: "{{ prometheus_user }}"
+      become: yes
+
+    - name: Extract prometheus release
+      unarchive:
+        src: "{{ prometheus_work_dir }}/{{ prometheus_release_name }}.tar.gz"
+        dest: "{{ prometheus_work_dir }}/"
+      become_user: "{{ prometheus_user }}"
+      become: yes
+      when: (download_prometheus_release.changed) or
+            (not check_existing_prometheus.stat.exists)
+
+    - name: Copy prometheus binaries
+      copy:
+        src: "{{ item }}"
+        dest: "{{ prometheus_install_dir }}"
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        mode: 0755
+      become: yes
+      with_items:
+        - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/prometheus"
+        - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/promtool"
+
+    - name: Ensure ownership of binaries
+      file:
+        path: "{{ item }}"
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        mode: 0755
+      become: yes
+      with_items:
+        - "{{ prometheus_install_dir }}/prometheus"
+        - "{{ prometheus_install_dir }}/promtool"
+
+    - name: Copy prometheus consoles and libraries
+      copy:
+        src: "{{ item }}"
+        dest: "{{ prometheus_conf_dir }}"
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        mode: 0644
+      become: yes
+      with_items:
+        - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/prometheus.yml"
+        - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/consoles"
+        - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/console_libraries"
+
+    - name: Change ownership of directory
+      file:
+        path: "{{ prometheus_conf_dir }}"
+        state: directory
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        recurse: yes
+
+    - name: Create prometheus service file
+      template:
+        src: prometheus.service.j2
+        dest: /etc/systemd/system/prometheus.service
+        owner: root
+        group: root
+        mode: 0644
+      become: yes
+      register: prometheus_service_file
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      become: yes
+      when: prometheus_service_file.changed
+
+    - name: Start and enable prometheus service
+      systemd:
+        name: prometheus
+        enabled: yes
+        state: restarted
+      become: yes
+
+
+# Download and install Prometheus Node Exporter
+- block:
+    - name: Download node_exporter release
+      get_url:
+        url: "https://github.com/prometheus/node_exporter/releases/download/v{{ prometheus_node_exporter_tar_version }}/{{ prometheus_node_exporter_release_name }}.tar.gz"
+        dest: "{{ prometheus_work_dir }}/"
+        checksum: "sha256:{{ prometheus_node_exporter_tar_checksum }}"
+      register: download_node_exporter_release
+      become_user: "{{ prometheus_user }}"
+      become: yes
+
+    - name: Check for existing node_exporter
+      stat:
+        path: "{{ prometheus_work_dir }}/{{ prometheus_node_exporter_release_name }}"
+      register: check_existing_node_exporter
+      become_user: "{{ prometheus_user }}"
+      become: yes
+
+    - name: Extract node_exporter release
+      unarchive:
+        src: "{{ prometheus_work_dir }}/{{ prometheus_node_exporter_release_name }}.tar.gz"
+        dest: "{{ prometheus_work_dir }}/"
+      when: (download_node_exporter_release.changed) or
+            (not check_existing_node_exporter.stat.exists)
+      become_user: "{{ prometheus_user }}"
+      become: yes
+
+    - name: Copy node_exporter binaries
+      copy:
+        src: "{{ prometheus_work_dir }}/{{ prometheus_node_exporter_release_name }}/node_exporter"
+        dest: "{{ prometheus_install_dir }}"
+        owner: "{{ prometheus_node_exporter_user }}"
+        group: "{{ prometheus_node_exporter_user }}"
+        mode: 0755
+      become: yes
+
+    - name: Ensure mode and ownership of node_exporter binary
+      file:
+        path: "{{ prometheus_install_dir }}/node_exporter"
+        owner: "{{ prometheus_node_exporter_user }}"
+        group: "{{ prometheus_node_exporter_user }}"
+        mode: 0755
+      become: yes
+
+    - name: Create node_exporter service file
+      template:
+        src: node_exporter.service.j2
+        dest: /etc/systemd/system/node_exporter.service
+        owner: root
+        group: root
+        mode: 0644
+      become: yes
+      register: prometheus_service_file
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      become: yes
+      when: prometheus_service_file.changed
+
+    - name: Start and enable node_exporter service
+      systemd:
+        name: node_exporter
+        state: restarted
+        enabled: yes
+      become: yes
+
+  when: prometheus_node_exporter_install
+
+
+# clean up afterwards
+- name: Remove workspace
+  file:
+      path: "{{ item }}"
+      state: absent
+  when: prometheus_clean_work_dir
+  with_items:
+    - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}"
+    - "{{ prometheus_work_dir }}/{{ prometheus_node_exporter_release_name }}"
