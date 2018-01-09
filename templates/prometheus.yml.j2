@@ -15,11 +15,14 @@ global:
 {% endif %}
 
   # Load and evaluate rules in this file every 'evaluation_interval' seconds. This field may be repeated.
-{% if prometheus_rule_files is defined and prometheus_rule_files|count > 0 %}
 rule_files:
-{% for file in prometheus_rule_files %}
-  - '{{ file }}'
-{% endfor%}
+  - 'alerting.rules'
+
+
+{% if prometheus_alertmanagers is defined and prometheus_alertmanagers|count > 0 %}
+# alerting
+alerting:
+{{ prometheus_alertmanagers | to_nice_yaml | indent(2, True) }}
 {% endif %}
 
 scrape_configs:

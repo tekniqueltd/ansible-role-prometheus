@@ -1,0 +1,7 @@
+#jinja2: trim_blocks: True, lstrip_blocks: False
+# https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#sending-alert-notifications
+
+{% if prometheus_alerting_rules is defined and prometheus_alerting_rules|count > 0 %}
+groups:
+{{ prometheus_alerting_rules | to_nice_yaml(indent=2) }}
+{% endif %}

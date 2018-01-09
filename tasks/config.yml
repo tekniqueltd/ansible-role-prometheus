@@ -11,3 +11,15 @@
   notify: restart prometheus
   tags:
     - config
+
+- name: configure alerts
+  template:
+    src: alerting.rules.j2
+    dest: "{{ prometheus_conf_dir }}/alerting.rules"
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    mode: 0644
+  become: yes
+  notify: restart prometheus
+  tags:
+    - config

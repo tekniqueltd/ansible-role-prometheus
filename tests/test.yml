@@ -3,9 +3,22 @@
   become: yes
   roles:
     - role: prometheus
-      prometheus_conf_dir: ./output
+      #prometheus_conf_dir: ./output
+      #prometheus_user: root
+      #prometheus_node_exporter_user: root
       prometheus_global_labels:
         monitor: example
+      prometheus_alerting_rules:
+        - name: alerting
+          rules:
+          - alert: InstanceDown
+            expr: up == 0
+            for: 5m
+            labels:
+              severity: slack
+            annotations:
+              summary: "Instance {{ '{{' }} $labels.instance {{ '}}' }} down"
+              description: "Instance  has been down for more than 5 minutes"
       prometheus_scrape_configs:
         - job_name: 'prometheus'
           static_configs:
@@ -15,3 +28,13 @@
           static_configs:
             - targets:
               - "localhost:9100"
+        - job_name: 'docker'
+          static_configs:
+            - targets:
+              - "localhost:9323"
+      prometheus_alertmanagers:
+        alertmanagers:
+          - scheme: 'https'
+          - static_configs:
+              - targets:
+                - "localhost:9093"

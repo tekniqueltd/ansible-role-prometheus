@@ -27,8 +27,6 @@ prometheus_global_scrape_timeout: 10s
 prometheus_global_evaluation_interval: 1m
 prometheus_global_labels: {} # k:v dict
 
-prometheus_rule_files: [] # - filename.rules
-
 prometheus_scrape_configs:
   - job_name: 'prometheus'
     static_configs:
