@@ -50,24 +50,18 @@
   when: prometheus_node_exporter_install
 
 
-- name: Create work directory
+- name: Create prometheus directories
   file:
-    path: "{{ prometheus_work_dir }}/"
+    path: "{{ item }}/"
     state: directory
     owner: "{{ prometheus_user }}"
     group: "{{ prometheus_user }}"
     mode: 0755
   become: yes
-
-- name: Create prometheus storage directory
-  file:
-    path: "{{ prometheus_storage_dir }}/"
-    state: directory
-    owner: "{{ prometheus_user }}"
-    group: "{{ prometheus_user }}"
-    mode: 0755
-    recurse: yes
-  become: yes
+  with_items:
+    - "{{ prometheus_conf_dir }}"
+    - "{{ prometheus_work_dir }}"
+    - "{{ prometheus_storage_dir }}"
 
 
 # Download and install Prometheus
@@ -92,6 +86,7 @@
       unarchive:
         src: "{{ prometheus_work_dir }}/{{ prometheus_release_name }}.tar.gz"
         dest: "{{ prometheus_work_dir }}/"
+        remote_src: yes
       become_user: "{{ prometheus_user }}"
       become: yes
       when: (download_prometheus_release.changed) or
@@ -104,6 +99,7 @@
         owner: "{{ prometheus_user }}"
         group: "{{ prometheus_user }}"
         mode: 0755
+        remote_src: yes
       become: yes
       with_items:
         - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/prometheus"
@@ -121,12 +117,7 @@
         - "{{ prometheus_install_dir }}/promtool"
 
     - name: Copy prometheus consoles and libraries
-      copy:
-        src: "{{ item }}"
-        dest: "{{ prometheus_conf_dir }}"
-        owner: "{{ prometheus_user }}"
-        group: "{{ prometheus_user }}"
-        mode: 0644
+      command: "cp -pr {{ item }} {{ prometheus_conf_dir }}/"
       become: yes
       with_items:
         - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/prometheus.yml"
@@ -187,6 +178,7 @@
       unarchive:
         src: "{{ prometheus_work_dir }}/{{ prometheus_node_exporter_release_name }}.tar.gz"
         dest: "{{ prometheus_work_dir }}/"
+        remote_src: yes
       when: (download_node_exporter_release.changed) or
             (not check_existing_node_exporter.stat.exists)
       become_user: "{{ prometheus_user }}"
@@ -199,6 +191,7 @@
         owner: "{{ prometheus_node_exporter_user }}"
         group: "{{ prometheus_node_exporter_user }}"
         mode: 0755
+        remote_src: yes
       become: yes
 
     - name: Ensure mode and ownership of node_exporter binary
@@ -240,6 +233,7 @@
   file:
       path: "{{ item }}"
       state: absent
+  become: yes
   when: prometheus_clean_work_dir
   with_items:
     - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}"
