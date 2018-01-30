@@ -11,15 +11,71 @@
   notify: restart prometheus
   tags:
     - config
+  when: prometheus_install_server
 
-- name: configure alerts
+
+# Configure alerts
+- block:
+    - name: Truncate alerting rule files
+      set_fact:
+        prometheus_alerting_rules_template_files_truncated: "{{ item | basename | regex_replace('.j2$','') }}"
+      with_items: "{{ prometheus_alerting_rules_template_files }}"
+      register: prometheus_alerting_rules_template_files_truncated_register
+
+    - name: Map truncated alerting rule files
+      set_fact:
+        prometheus_alerting_rules_template_files_truncated: "{{ prometheus_alerting_rules_template_files_truncated_register.results | map(attribute='ansible_facts.prometheus_alerting_rules_template_file_truncated') | list }}"
+
+    - name: Template alerting rules
+      template:
+        src: "{{ item }}"
+        dest: "{{ prometheus_conf_dir }}/alerts/{{ item | basename | regex_replace('.j2$','') }}"
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        mode: 0644
+      become: yes
+      notify: restart prometheus
+      with_items: "{{ prometheus_alerting_rules_template_files }}"
+      tags:
+        - config
+
+    - name: Find all alerting rules files
+      shell: ls -1 "{{ prometheus_conf_dir }}/alerts/"
+      register: find_alerting_rules
+      changed_when: no
+
+    - name: Remove undefined altering rules
+      shell: ls -1 "{{ prometheus_conf_dir }}/alerts/"
+      register: find_alerting_rules
+      changed_when: no
+
+    - name: configure alert endpoints
+      template:
+        src: alerting_config.yml.j2
+        dest: "{{ prometheus_alertmanager_conf_dir }}/config.yml"
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        mode: 0644
+      become: yes
+  when: prometheus_install_alert_manager
+
+
+- name: configure docker-compose file
   template:
-    src: alerting.rules.j2
-    dest: "{{ prometheus_conf_dir }}/alerting.rules"
-    owner: "{{ prometheus_user }}"
-    group: "{{ prometheus_user }}"
+    src: docker-compose.yml.j2
+    dest: "{{ prometheus_docker_dir }}/docker-compose.yml"
+    owner: "{{ prometheus_docker_user }}"
+    group: "{{ prometheus_docker_user }}"
     mode: 0644
   become: yes
-  notify: restart prometheus
-  tags:
-    - config
+  notify: restart alertmanager
+  when: prometheus_install_alert_manager
+
+- name: Start docker compose
+  docker_service:
+    project_src: "{{ prometheus_docker_dir }}"
+    state: present
+  become: yes
+  become_user: "{{ prometheus_docker_user }}"
+  when: prometheus_install_alert_manager
+

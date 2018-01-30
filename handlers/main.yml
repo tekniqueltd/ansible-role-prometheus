@@ -6,10 +6,21 @@
     name: prometheus
     state: reloaded
   become: yes
-  when: 
+  when: prometheus_install_server
 
 
 - name: systemctl reload
   systemd:
     daemon_reload: yes
   become: yes
+
+
+- name: restart alertmanager
+  docker_service:
+    project_src: "{{ prometheus_docker_dir }}"
+    state: present
+    restarted: yes
+    services: alertmanager
+  become: yes
+  become_user: "{{ prometheus_docker_user }}"
+

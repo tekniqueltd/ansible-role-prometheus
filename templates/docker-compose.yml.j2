@@ -1,0 +1,34 @@
+version: '2'
+services:
+{% if prometheus_install_alert_manager|bool %} 
+  alertmanager:
+    container_name: alertmanager
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
+    volumes:
+      - {{ prometheus_alertmanager_conf_dir }}:/etc/alertmanager
+      - {{ prometheus_alertmanager_storage_dir }}:/var/lib/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/var/lib/alertmanager'
+{% endif %}
+{% if prometheus_install_cadvisor|bool %} 
+  cadvisor:
+    container_name: cadvisor
+    image: google/cadvisor:latest
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - 8080:8080
+{% endif %}
+{% if prometheus_install_grafana|bool %} 
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+{% endif %}

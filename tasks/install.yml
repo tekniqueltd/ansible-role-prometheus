@@ -39,17 +39,26 @@
   user:
     name: "{{ prometheus_user }}"
   become: yes
-  when: prometheus_user != "root"
+  when: (prometheus_user != "root") and
+        (prometheus_install_server|bool)
 
-- block:
-    - name: Create node_exporter user if not root
-      user:
-        name: "{{ prometheus_node_exporter_user }}"
-      become: yes
-      when: prometheus_node_exporter_user != "root"
-  when: prometheus_node_exporter_install
+- name: Create prometheus docker user
+  user:
+    name: "{{ prometheus_docker_user }}"
+    home: "{{ prometheus_docker_dir }}"
+    createhome: yes
+    groups: docker
+    append: yes
+  become: yes
+  when: prometheus_install_alert_manager
 
+- name: Create node_exporter user if not root
+  user:
+    name: "{{ prometheus_node_exporter_user }}"
+  become: yes
+  when: prometheus_node_exporter_user != "root"
 
+# directory setup
 - name: Create prometheus directories
   file:
     path: "{{ item }}/"
@@ -60,9 +69,31 @@
   become: yes
   with_items:
     - "{{ prometheus_conf_dir }}"
-    - "{{ prometheus_work_dir }}"
+    - "{{ prometheus_conf_dir }}/alerts"
     - "{{ prometheus_storage_dir }}"
+  when: prometheus_install_server
 
+- name: Create prometheus work directory
+  file:
+    path: "{{ prometheus_work_dir }}"
+    state: directory
+    owner: "{{ prometheus_node_exporter_user }}"
+    group: "{{ prometheus_node_exporter_user }}"
+    mode: 0777
+  become: yes
+
+- name: Create alert manager directory
+  file:
+    path: "{{ item }}/"
+    state: directory
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    mode: 0755
+  become: yes
+  with_items:
+    - "{{ prometheus_alertmanager_storage_dir }}"
+    - "{{ prometheus_alertmanager_conf_dir }}"
+  when: prometheus_install_alert_manager
 
 # Download and install Prometheus
 - block:
@@ -154,6 +185,7 @@
         enabled: yes
         state: restarted
       become: yes
+  when: prometheus_install_server|bool
 
 
 # Download and install Prometheus Node Exporter
@@ -164,14 +196,12 @@
         dest: "{{ prometheus_work_dir }}/"
         checksum: "sha256:{{ prometheus_node_exporter_tar_checksum }}"
       register: download_node_exporter_release
-      become_user: "{{ prometheus_user }}"
       become: yes
 
     - name: Check for existing node_exporter
       stat:
         path: "{{ prometheus_work_dir }}/{{ prometheus_node_exporter_release_name }}"
       register: check_existing_node_exporter
-      become_user: "{{ prometheus_user }}"
       become: yes
 
     - name: Extract node_exporter release
@@ -181,7 +211,6 @@
         remote_src: yes
       when: (download_node_exporter_release.changed) or
             (not check_existing_node_exporter.stat.exists)
-      become_user: "{{ prometheus_user }}"
       become: yes
 
     - name: Copy node_exporter binaries
@@ -225,7 +254,7 @@
         enabled: yes
       become: yes
 
-  when: prometheus_node_exporter_install
+  when: prometheus_install_node_exporter|bool
 
 
 # clean up afterwards

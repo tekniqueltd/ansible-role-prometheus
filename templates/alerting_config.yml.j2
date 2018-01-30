@@ -1,0 +1,20 @@
+global:
+  smtp_smarthost: 'mailslurper:2500'
+  smtp_from: 'georgy@tron.com'
+  smtp_require_tls: false
+
+templates:
+  - '/etc/alertmanager/template/*.tmpl'
+
+route:
+  receiver: mail
+  routes:
+    - match:
+        severity: critical
+      continue: true
+      receiver: mail
+receivers:
+  - name: mail
+    email_configs:
+      - to: 'georgy@teknique.com'
+

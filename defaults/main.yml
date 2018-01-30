@@ -1,14 +1,23 @@
 ---
 # defaults file for prometheus
+prometheus_install_server: yes
+prometheus_install_node_exporter: yes
+prometheus_install_alert_manager: yes
+prometheus_install_cadvisor: yes
+prometheus_install_grafana: no
 
 # assume user == group
 prometheus_user: prometheus
+prometheus_docker_user: prometheus-docker
 prometheus_node_exporter_user: node_exporter
 
+prometheus_docker_dir: /srv/prometheus
 prometheus_conf_dir: /etc/prometheus
 prometheus_install_dir: /usr/bin
 prometheus_log_dir: /var/log/prometheus
 prometheus_storage_dir: /var/lib/prometheus
+prometheus_alertmanager_storage_dir: /var/lib/alertmanager
+prometheus_alertmanager_conf_dir: /etc/alertmanager
 prometheus_work_dir: /tmp/prometheus
 prometheus_clean_work_dir: yes
 
@@ -32,7 +41,18 @@ prometheus_scrape_configs:
     static_configs:
       - targets:
         - "localhost:9090"
-  - job_name: 'node'
+  - job_name: 'prometheus-node'
     static_configs:
       - targets:
         - "localhost:9100"
+
+prometheus_alertmanagers:
+  alertmanagers:
+    - scheme: 'https'
+    - static_configs:
+      - targets:
+        - "localhost:9093"
+
+prometheus_alerting_rules_template_files: [
+#  "./templates/alertmanager-templates/alerting_rules_default.yml.j2"
+]
