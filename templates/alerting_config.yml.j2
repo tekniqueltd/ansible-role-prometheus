@@ -1,6 +1,6 @@
 global:
   smtp_smarthost: 'mailslurper:2500'
-  smtp_from: 'georgy@tron.com'
+  smtp_from: 'smtp@domain.com'
   smtp_require_tls: false
 
 templates:
@@ -16,5 +16,5 @@ route:
 receivers:
   - name: mail
     email_configs:
-      - to: 'georgy@teknique.com'
+      - to: 'devops@domain.com'
 
