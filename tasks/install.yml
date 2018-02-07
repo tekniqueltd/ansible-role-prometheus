@@ -162,6 +162,7 @@
         owner: "{{ prometheus_user }}"
         group: "{{ prometheus_user }}"
         recurse: yes
+      become: yes
 
     - name: Create prometheus service file
       template:
