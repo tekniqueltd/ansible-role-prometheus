@@ -18,7 +18,7 @@
 - block:
     - name: Truncate alerting rule files
       set_fact:
-        prometheus_alerting_rules_template_files_truncated: "{{ item | basename | regex_replace('.j2$','') }}"
+        prometheus_alerting_rules_template_file_truncated: "{{ item | basename | regex_replace('.j2$','') }}"
       with_items: "{{ prometheus_alerting_rules_template_files }}"
       register: prometheus_alerting_rules_template_files_truncated_register
 
@@ -44,10 +44,13 @@
       register: find_alerting_rules
       changed_when: no
 
-    - name: Remove undefined altering rules
-      shell: ls -1 "{{ prometheus_conf_dir }}/alerts/"
-      register: find_alerting_rules
-      changed_when: no
+    - name: Remove undefined alerting rules
+      file:
+        path: "{{ prometheus_conf_dir }}/alerts/{{ item }}"
+        state: absent
+      become: yes
+      with_items: "{{ find_alerting_rules.stdout_lines }}"
+      when: item not in prometheus_alerting_rules_template_files_truncated
 
     - name: configure alert endpoints
       template:
