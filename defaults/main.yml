@@ -56,3 +56,14 @@ prometheus_alertmanagers:
 prometheus_alerting_rules_template_files: [
 #  "./templates/alertmanager-templates/alerting_rules_default.yml.j2"
 ]
+
+# Alert manager config
+prometheus_smtp_smarthost: 'mailserver:587'
+prometheus_smtp_from: 'alertmanager@domain.com'
+prometheus_smtp_auth_username: '<username>'
+prometheus_smtp_auth_password: '<password>'
+
+prometheus_alertmanager_receivers:
+  - name: mail
+    email_configs:
+      - to: 'devops@domain.com'

@@ -1,7 +1,9 @@
 global:
-  smtp_smarthost: 'mailslurper:2500'
-  smtp_from: 'smtp@domain.com'
-  smtp_require_tls: false
+  smtp_smarthost: {{ prometheus_smtp_smarthost }}
+  smtp_from: {{ prometheus_smtp_from }}
+  smtp_auth_username: {{ prometheus_smtp_auth_username }}
+  smtp_auth_password: {{ prometheus_smtp_auth_password }}
+
 
 templates:
   - '/etc/alertmanager/template/*.tmpl'
@@ -14,7 +16,4 @@ route:
       continue: true
       receiver: mail
 receivers:
-  - name: mail
-    email_configs:
-      - to: 'devops@domain.com'
-
+{{ prometheus_alertmanager_receivers | to_nice_yaml(indent=2) }}
