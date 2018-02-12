@@ -62,8 +62,9 @@ prometheus_smtp_smarthost: 'mailserver:587'
 prometheus_smtp_from: 'alertmanager@domain.com'
 prometheus_smtp_auth_username: '<username>'
 prometheus_smtp_auth_password: '<password>'
+prometheus_alertmanager_default_receiver: mail
+prometheus_alertmanager_routes:
+  critical: mail
 
 prometheus_alertmanager_receivers:
-  - name: mail
-    email_configs:
-      - to: 'devops@domain.com'
+  mail: "'devops@domain.com'"

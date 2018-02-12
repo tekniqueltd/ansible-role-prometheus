@@ -9,11 +9,18 @@ templates:
   - '/etc/alertmanager/template/*.tmpl'
 
 route:
-  receiver: mail
+  receiver: {{ prometheus_alertmanager_default_receiver }}
   routes:
+{% for k,v in prometheus_alertmanager_routes.iteritems() %}
     - match:
-        severity: critical
+        severity: {{ k }}
       continue: true
-      receiver: mail
+      receiver: {{ v }}
+{% endfor %}
+
 receivers:
-{{ prometheus_alertmanager_receivers | to_nice_yaml(indent=2) }}
+{% for k,v in prometheus_alertmanager_receivers.iteritems() %}
+  - name: {{ k }}
+    email_configs:
+      - to: {{ v }}
+{% endfor %}
