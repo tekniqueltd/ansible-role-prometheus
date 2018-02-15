@@ -7,7 +7,7 @@ After=network-online.target
 User={{ prometheus_node_exporter_user }}
 Group={{ prometheus_node_exporter_user }}
 Type=simple
-ExecStart={{ prometheus_install_dir }}/node_exporter
+ExecStart={{ prometheus_install_dir }}/node_exporter --collector.textfile.directory=/home/node_exporter/
 
 [Install]
 WantedBy=multi-user.target
