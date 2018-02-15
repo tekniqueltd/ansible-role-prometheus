@@ -8,6 +8,11 @@
   become: yes
   when: prometheus_install_server
 
+- name: restart node-exporter
+  systemd:
+    name: node_exporter
+    state: reloaded
+  become: yes
 
 - name: systemctl reload
   systemd:
