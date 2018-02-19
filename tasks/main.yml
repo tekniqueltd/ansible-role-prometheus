@@ -1,5 +1,4 @@
 ---
-
 - name: install prometheus
   include: install.yml
 

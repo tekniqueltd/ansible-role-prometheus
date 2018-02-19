@@ -1,5 +1,4 @@
 ---
-
 - name: Install dependencies
   apt:
     name: "{{ item }}"
@@ -16,6 +15,9 @@
     - libjs-moment
     - libjs-mustache
     - libjs-rickshaw
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 - name: Ensure prometheus apt packages are not present
   apt:
@@ -26,13 +28,17 @@
   when: ansible_os_family == 'Debian'
   with_items:
     - prometheus
-    - prometheus-node-exporter
+    - prometheus_node_exporter
+  tags:
+    - prometheus_deploy
 
-
-- set_fact:
+- name: Set prometheus and node-exporter release name
+  set_fact:
     prometheus_release_name: "prometheus-{{ prometheus_tar_version }}.linux-{{ ansible_architecture|regex_replace('x86_64','amd64') }}"
     prometheus_node_exporter_release_name: "node_exporter-{{ prometheus_node_exporter_tar_version }}.linux-{{ ansible_architecture|regex_replace('x86_64','amd64') }}"
-
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 # user/group creation
 - name: Create prometheus user if not root
@@ -41,6 +47,9 @@
   become: yes
   when: (prometheus_user != "root") and
         (prometheus_install_server|bool)
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 - name: Create prometheus docker user
   user:
@@ -51,12 +60,18 @@
     append: yes
   become: yes
   when: prometheus_install_alert_manager
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 - name: Create node_exporter user if not root
   user:
     name: "{{ prometheus_node_exporter_user }}"
   become: yes
   when: prometheus_node_exporter_user != "root"
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 # directory setup
 - name: Create prometheus directories
@@ -72,6 +87,9 @@
     - "{{ prometheus_conf_dir }}/alerts"
     - "{{ prometheus_storage_dir }}"
   when: prometheus_install_server
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 - name: Create prometheus work directory
   file:
@@ -81,6 +99,9 @@
     group: "{{ prometheus_node_exporter_user }}"
     mode: 0777
   become: yes
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 - name: Create alert manager directory
   file:
@@ -94,6 +115,9 @@
     - "{{ prometheus_alertmanager_storage_dir }}"
     - "{{ prometheus_alertmanager_conf_dir }}"
   when: prometheus_install_alert_manager
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 # Download and install Prometheus
 - block:
@@ -187,7 +211,9 @@
         state: restarted
       become: yes
   when: prometheus_install_server|bool
-
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 # Download and install Prometheus Node Exporter
 - block:
@@ -254,9 +280,10 @@
         state: restarted
         enabled: yes
       become: yes
-
   when: prometheus_install_node_exporter|bool
-
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 # clean up afterwards
 - name: Remove workspace
@@ -268,3 +295,6 @@
   with_items:
     - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}"
     - "{{ prometheus_work_dir }}/{{ prometheus_node_exporter_release_name }}"
+  tags:
+    - prometheus
+    - prometheus_deploy

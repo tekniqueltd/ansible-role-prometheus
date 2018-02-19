@@ -1,5 +1,4 @@
 ---
-
 - name: configure prometheus
   template:
     src: prometheus.yml.j2
@@ -9,10 +8,10 @@
     mode: 0644
   become: yes
   notify: restart prometheus
-  tags:
-    - config
   when: prometheus_install_server
-
+  tags:
+    - prometheus_config
+    - prometheus_deploy
 
 # Configure alerts
 - block:
@@ -37,7 +36,7 @@
       notify: restart prometheus
       with_items: "{{ prometheus_alerting_rules_template_files }}"
       tags:
-        - config
+        - prometheus_config
 
     - name: Find all alerting rules files
       shell: ls -1 "{{ prometheus_conf_dir }}/alerts/"
@@ -61,7 +60,9 @@
         mode: 0644
       become: yes
   when: prometheus_install_alert_manager
-
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 - name: configure docker-compose file
   template:
@@ -73,6 +74,9 @@
   become: yes
   notify: restart alertmanager
   when: prometheus_install_alert_manager
+  tags:
+    - prometheus
+    - prometheus_deploy
 
 - name: Start docker compose
   docker_service:
@@ -81,4 +85,6 @@
   become: yes
   become_user: "{{ prometheus_docker_user }}"
   when: prometheus_install_alert_manager
-
+  tags:
+    - prometheus
+    - prometheus_deploy
