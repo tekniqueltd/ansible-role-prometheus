@@ -103,6 +103,20 @@
     - prometheus
     - prometheus_deploy
 
+- name: Create node exporter directory
+  file:
+    path: "{{ item }}/"
+    state: directory
+    owner: "{{ prometheus_node_exporter_user }}"
+    group: "{{ prometheus_node_exporter_user }}"
+    mode: 0755
+  become: yes
+  with_items:
+    - "{{ prometheus_node_exporter_dir }}"
+  when: prometheus_install_node_exporter
+  tags:
+    - prometheus_deploy
+
 - name: Create alert manager directory
   file:
     path: "{{ item }}/"

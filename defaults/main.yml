@@ -16,6 +16,7 @@ prometheus_conf_dir: /etc/prometheus
 prometheus_install_dir: /usr/bin
 prometheus_log_dir: /var/log/prometheus
 prometheus_storage_dir: /var/lib/prometheus
+prometheus_node_exporter_dir: /etc/prometheus/node-exporter
 prometheus_alertmanager_storage_dir: /var/lib/alertmanager
 prometheus_alertmanager_conf_dir: /etc/alertmanager
 prometheus_work_dir: /tmp/prometheus
