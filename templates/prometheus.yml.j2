@@ -22,7 +22,7 @@ rule_files:
 {% if prometheus_alertmanagers is defined and prometheus_alertmanagers|count > 0 %}
 # alerting
 alerting:
-{{ prometheus_alertmanagers | to_nice_yaml | indent(2, True) }}
+{{ prometheus_alertmanagers | to_yaml | indent(2,True) }}
 {% endif %}
 
 scrape_configs:
