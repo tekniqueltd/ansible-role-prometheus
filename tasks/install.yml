@@ -186,12 +186,27 @@
         - "{{ prometheus_install_dir }}/promtool"
 
     - name: Copy prometheus consoles and libraries
-      command: "cp -pr {{ item }} {{ prometheus_conf_dir }}/"
+      copy:
+        src: "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/{{ item }}"
+        dest: "{{ prometheus_conf_dir }}/{{ item }}"
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        force: yes
+        remote_src: yes
       become: yes
       with_items:
-        - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/prometheus.yml"
-        - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/consoles"
-        - "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/console_libraries"
+        - consoles
+        - console_libraries
+
+    - name: Copy prometheus default config
+      copy:
+        src: "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/prometheus.yml"
+        dest: "{{ prometheus_conf_dir }}/prometheus.yml"
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        force: no
+        remote_src: yes
+      become: yes
 
     - name: Change ownership of directory
       file:
