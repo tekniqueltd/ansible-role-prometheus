@@ -186,13 +186,7 @@
         - "{{ prometheus_install_dir }}/promtool"
 
     - name: Copy prometheus consoles and libraries
-      copy:
-        src: "{{ prometheus_work_dir }}/{{ prometheus_release_name }}/{{ item }}"
-        dest: "{{ prometheus_conf_dir }}/{{ item }}"
-        owner: "{{ prometheus_user }}"
-        group: "{{ prometheus_user }}"
-        force: yes
-        remote_src: yes
+      command: "cp -pr {{ prometheus_work_dir }}/{{ prometheus_release_name }}/{{ item }} {{ prometheus_conf_dir }}/{{ item }}"
       become: yes
       with_items:
         - consoles
