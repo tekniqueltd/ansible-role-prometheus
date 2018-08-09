@@ -63,9 +63,26 @@ prometheus_smtp_smarthost: 'mailserver:587'
 prometheus_smtp_from: 'alertmanager@domain.com'
 prometheus_smtp_auth_username: '<username>'
 prometheus_smtp_auth_password: '<password>'
+prometheus_slack_api_url: ""
 prometheus_alertmanager_default_receiver: mail
+prometheus_alertmanager_group_by: [alertname, datacenter, app]
 prometheus_alertmanager_routes:
-  critical: mail
+  - { severity: warn, channel: slack-notifications }
+  - { severity: warn, channel: mail-notifications }
+  - { severity: crit, channel: mail-notifications }
 
 prometheus_alertmanager_receivers:
-  mail: "'devops@domain.com'"
+  - mail_notifications:
+    name: "mail-notifications"
+    type: "email_configs"
+    configs:
+      - to: 'devops@domain.com'
+  - slack_notifications:
+    name: "slack-notifications"
+    type: "slack_configs"
+    configs:
+      - channel: '#alerts'
+        send_resolved: true
+        icon_emoji: ':prometheus:'
+        title: '{%raw%}{{ template "slack.myorg.title" . }}{%endraw%}'
+        text: '{%raw%}{{ template "slack.myorg.text" . }}{%endraw%}'

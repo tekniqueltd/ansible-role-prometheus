@@ -3,6 +3,7 @@ global:
   smtp_from: {{ prometheus_smtp_from }}
   smtp_auth_username: {{ prometheus_smtp_auth_username }}
   smtp_auth_password: {{ prometheus_smtp_auth_password }}
+  slack_api_url: {{ prometheus_slack_api_url }}
 
 
 templates:
@@ -10,17 +11,20 @@ templates:
 
 route:
   receiver: {{ prometheus_alertmanager_default_receiver }}
+  group_by: [{{ prometheus_alertmanager_group_by|join(', ') }}]
   routes:
-{% for k,v in prometheus_alertmanager_routes.iteritems() %}
+{% for routes in prometheus_alertmanager_routes %}
     - match:
-        severity: {{ k }}
+        severity: {{ routes.severity }}
       continue: true
-      receiver: {{ v }}
+      receiver: {{ routes.channel}}
 {% endfor %}
 
 receivers:
-{% for k,v in prometheus_alertmanager_receivers.iteritems() %}
-  - name: {{ k }}
-    email_configs:
-      - to: {{ v }}
+{% for receiver in prometheus_alertmanager_receivers %}
+  - name: {{receiver.name}}
+    {{receiver.type}}:
+{% for config in receiver.configs %}
+    - {{ config|to_yaml }}
 {% endfor %}
+{%  endfor %}
