@@ -2,8 +2,6 @@
 prometheus_install_server: yes
 prometheus_install_node_exporter: yes
 prometheus_install_alert_manager: yes
-prometheus_install_cadvisor: yes
-prometheus_install_grafana: no
 
 prometheus_user: prometheus
 prometheus_docker_user: prometheus-docker
@@ -11,7 +9,6 @@ prometheus_node_exporter_user: node_exporter
 
 prometheus_docker_dir: /srv/prometheus
 prometheus_conf_dir: /etc/prometheus
-
 
 prometheus_global_scrape_interval: 30s
 prometheus_global_scrape_timeout: 10s
