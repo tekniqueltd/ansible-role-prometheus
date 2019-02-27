@@ -4,14 +4,13 @@
     name: prometheus
     state: restarted
   become: yes
-  when: prometheus_install_server
   tags:
     - prometheus
     - prometheus_deploy
 
-- name: restart node_exporter
+- name: restart prometheus-node-exporter
   systemd:
-    name: node_exporter
+    name: prometheus-node-exporter
     state: restarted
   become: yes
   tags:
@@ -34,6 +33,14 @@
     services: alertmanager
   become: yes
   become_user: "{{ prometheus_docker_user }}"
+  tags:
+    - prometheus
+    - prometheus_deploy
+
+- name: apt update cache
+  apt:
+    update_cache: yes
+  become: yes
   tags:
     - prometheus
     - prometheus_deploy

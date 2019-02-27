@@ -1,5 +1,5 @@
 ---
-- name: configure prometheus
+- name: Configure prometheus
   template:
     src: prometheus.yml.j2
     dest: "{{ prometheus_conf_dir }}/prometheus.yml"
@@ -10,6 +10,7 @@
   notify: restart prometheus
   when: prometheus_install_server
   tags:
+    - prometheus
     - prometheus_config
     - prometheus_deploy
 
@@ -51,7 +52,7 @@
       with_items: "{{ find_alerting_rules.stdout_lines }}"
       when: item not in prometheus_alerting_rules_template_files_truncated
 
-    - name: configure alert endpoints
+    - name: Configure alert endpoints
       template:
         src: alerting_config.yml.j2
         dest: "{{ prometheus_alertmanager_conf_dir }}/config.yml"
@@ -64,7 +65,7 @@
     - prometheus
     - prometheus_deploy
 
-- name: configure docker-compose file
+- name: Configure docker-compose file
   template:
     src: docker-compose.yml.j2
     dest: "{{ prometheus_docker_dir }}/docker-compose.yml"
