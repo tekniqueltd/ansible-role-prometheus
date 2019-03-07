@@ -40,6 +40,8 @@ prometheus_alerting_rules_template_files: [
 prometheus_alertmanager_image_name: 'prom/alertmanager'
 prometheus_alertmanager_image_version: 'latest'
 
+prometheus_alertmanager_storage_dir: /srv/prometheus/alertmanager
+prometheus_alertmanager_conf_dir: /srv/prometheus/alertmanager
 prometheus_smtp_smarthost: 'mailserver:587'
 prometheus_smtp_from: 'alertmanager@domain.com'
 prometheus_smtp_auth_username: '<username>'
