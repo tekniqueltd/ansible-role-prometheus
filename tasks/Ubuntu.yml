@@ -1,0 +1,79 @@
+---
+
+- name: Create alert manager directory
+  file:
+    path: "{{ item }}/"
+    state: directory
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    mode: 0755
+  become: yes
+  with_items:
+    - "{{ prometheus_alertmanager_storage_dir }}"
+    - "{{ prometheus_alertmanager_conf_dir }}"
+  when: prometheus_install_alert_manager
+  tags:
+    - prometheus
+    - prometheus_deploy
+
+- name: Install node exporter
+  apt:
+    name:
+      - prometheus-node-exporter
+  become: yes
+  when: prometheus_install_node_exporter
+  tags:
+    - prometheus
+    - prometheus_deploy
+
+- name: Install prometheus
+  apt:
+    name:
+      - prometheus
+  become: yes
+  when: prometheus_install_server
+  tags:
+    - prometheus
+    - prometheus_deploy
+
+- name: Enable prometheus-node-exporter
+  systemd:
+    name: prometheus-node-exporter
+    enabled: yes
+  become: yes
+  when: prometheus_install_node_exporter
+  tags:
+    - prometheus
+    - prometheus_deploy
+
+- name: Start prometheus-node-exporter
+  systemd:
+    name: prometheus-node-exporter
+    state: started
+  become: yes
+  register: start_prometheus_node_exporter
+  when: prometheus_install_node_exporter
+  tags:
+    - prometheus
+    - prometheus_deploy
+
+- name: Enable prometheus
+  systemd:
+    name: prometheus
+    enabled: yes
+  become: yes
+  when: prometheus_install_server
+  tags:
+    - prometheus
+    - prometheus_deploy
+
+- name: Start prometheus
+  systemd:
+    name: prometheus
+    state: started
+  become: yes
+  register: start_prometheus
+  when: prometheus_install_server
+  tags:
+    - prometheus
+    - prometheus_deploy
