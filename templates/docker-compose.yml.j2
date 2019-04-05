@@ -7,7 +7,7 @@ services:
     ports:
       - "9093:9093"
     volumes:
-      - {{ prometheus_alertmanager_conf_dir }}:/etc/alertmanager
+      - {{ prometheus_alertmanager_docker_dir }}:/etc/alertmanager
       - {{ prometheus_alertmanager_storage_dir }}:/var/lib/alertmanager
     command:
       - '--config.file=/etc/alertmanager/config.yml'

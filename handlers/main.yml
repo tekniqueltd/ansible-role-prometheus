@@ -27,12 +27,12 @@
 
 - name: restart alertmanager
   docker_service:
-    project_src: "{{ prometheus_docker_dir }}"
+    project_src: "{{ prometheus_alertmanager_docker_dir }}"
     state: present
     restarted: yes
     services: alertmanager
   become: yes
-  become_user: "{{ prometheus_docker_user }}"
+  become_user: "{{ prometheus_alertmanager_docker_user }}"
   tags:
     - prometheus
     - prometheus_deploy

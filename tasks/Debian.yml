@@ -1,21 +1,5 @@
 ---
 
-- name: Create alert manager directory
-  file:
-    path: "{{ item }}/"
-    state: directory
-    owner: "{{ prometheus_user }}"
-    group: "{{ prometheus_user }}"
-    mode: 0755
-  become: yes
-  with_items:
-    - "{{ prometheus_alertmanager_storage_dir }}"
-    - "{{ prometheus_alertmanager_conf_dir }}"
-  when: prometheus_install_alert_manager
-  tags:
-    - prometheus
-    - prometheus_deploy
-
 - name: Create stretch-backports apt config
   copy:
     content: |

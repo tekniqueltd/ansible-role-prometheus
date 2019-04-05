@@ -4,10 +4,8 @@ prometheus_install_node_exporter: yes
 prometheus_install_alert_manager: yes
 
 prometheus_user: prometheus
-prometheus_docker_user: prometheus-docker
 prometheus_node_exporter_user: node_exporter
 
-prometheus_docker_dir: /srv/prometheus
 prometheus_conf_dir: /etc/prometheus
 
 prometheus_global_scrape_interval: 30s
@@ -37,11 +35,12 @@ prometheus_alerting_rules_template_files: [
 ]
 
 # Alert manager config
+prometheus_alertmanager_docker_user: alertmanager-docker
 prometheus_alertmanager_image_name: 'prom/alertmanager'
 prometheus_alertmanager_image_version: 'latest'
 
-prometheus_alertmanager_storage_dir: /srv/prometheus/alertmanager
-prometheus_alertmanager_conf_dir: /srv/prometheus/alertmanager
+prometheus_alertmanager_docker_dir: /srv/alertmanager
+prometheus_alertmanager_storage_dir: /srv/alertmanager/data
 prometheus_smtp_smarthost: 'mailserver:587'
 prometheus_smtp_from: 'alertmanager@domain.com'
 prometheus_smtp_auth_username: '<username>'
