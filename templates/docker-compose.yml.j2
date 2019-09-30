@@ -12,4 +12,5 @@ services:
     command:
       - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/var/lib/alertmanager'
+    restart: always
 {% endif %}
