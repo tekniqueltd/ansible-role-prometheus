@@ -40,7 +40,7 @@ prometheus_alertmanager_image_name: 'prom/alertmanager'
 prometheus_alertmanager_image_version: 'latest'
 
 prometheus_alertmanager_docker_dir: /srv/alertmanager
-prometheus_alertmanager_storage_dir: /srv/alertmanager/data
+prometheus_alertmanager_storage_dir: "{{ prometheus_alertmanager_docker_dir }}/data"
 prometheus_smtp_smarthost: 'mailserver:587'
 prometheus_smtp_from: 'alertmanager@domain.com'
 prometheus_smtp_auth_username: '<username>'
@@ -52,7 +52,7 @@ prometheus_alertmanager_routes:
   - { severity: warn, channel: slack-notifications }
   - { severity: warn, channel: mail-notifications }
   - { severity: crit, channel: mail-notifications }
-
+prometheus_alertmanager_notification_template_files: []
 prometheus_alertmanager_receivers:
   - mail_notifications:
     name: "mail-notifications"
